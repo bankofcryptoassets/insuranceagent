@@ -1,0 +1,27 @@
+{
+  "name": "bitmore-xmtp-agent",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx --watch src/index.ts",
+    "gen:keys": "tsx ../../scripts/generateKeys.ts",
+    "lint": "cd ../.. && yarn eslint examples/xmtp-gpt",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@xmtp/node-sdk": "^2.1.0",
+    "axios": "^1.7.9",
+    "openai": "4.94.0",
+    "uint8arrays": "^5.1.0",
+    "viem": "^2.31.0"
+  },
+  "devDependencies": {
+    "tsx": "*",
+    "typescript": "*"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
