@@ -9,6 +9,7 @@ import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { tools } from "./tools/tools.ts";
 import { call } from "./tools/insuranceTools.ts";
+import fs from "fs";
 
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
@@ -30,12 +31,26 @@ const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
  */
 async function initiateLoanAgent(): Promise<void> {
   try {
+
+    // get db path
+    const getDbPath = (env: string, suffix: string = "xmtp") => {
+      //Checks if the environment is a Railway deployment
+      const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH ?? ".data/xmtp";
+      // Create database directory if it doesn't exist
+      if (!fs.existsSync(volumePath)) {
+        fs.mkdirSync(volumePath, { recursive: true });
+      }
+      const dbPath = `${volumePath}/${env}-${suffix}.db3`;
+    
+      return dbPath;
+    };
     /* Create the signer using viem and parse the encryption key for the local db */
     const signer = createSigner(WALLET_KEY);
     const dbEncryptionKey = getEncryptionKeyFromHex(ENCRYPTION_KEY);
     const client = await Client.create(signer, {
       dbEncryptionKey,
       env: XMTP_ENV as XmtpEnv,
+      dbPath: getDbPath(XMTP_ENV),
     });
     void logAgentDetails(client);
 
