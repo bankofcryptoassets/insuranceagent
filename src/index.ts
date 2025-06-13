@@ -3,12 +3,12 @@ import {
   getEncryptionKeyFromHex,
   logAgentDetails,
   validateEnvironment,
-} from "./helpers/client.ts";
+} from "./helpers/client";
 import { Client, type XmtpEnv } from "@xmtp/node-sdk";
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
-import { tools } from "./tools/tools.ts";
-import { call } from "./tools/insuranceTools.ts";
+import { tools } from "./tools/tools";
+import { call } from "./tools/insuranceTools";
 import fs from "fs";
 
 /* Get the wallet key associated to the public key of
