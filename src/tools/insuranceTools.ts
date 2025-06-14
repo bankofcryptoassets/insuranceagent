@@ -95,12 +95,12 @@ async function calculateInsuranceDetails(obj: any): Promise<InsuranceDetails | {
     // check if the user has an active insurance for the loan
     const loanId = obj._id;
     const userId = obj.userId;
-    const activeInsurance = await getAllActiveInsurances({userId});
-    if (activeInsurance.length > 0) {
-      return {
-        message: "User already has an active insurance for the loan, can't purchase new insurance"
-      };
-    }
+    //const activeInsurance = await getAllActiveInsurances({userId});
+    // if (activeInsurance.length > 0) {
+    //   return {
+    //     message: "User already has an active insurance for the loan, can't purchase new insurance"
+    //   };
+    // }
 
     const response = await axios.get(`${API_BASE_URL}/insurance/calculate/${loanId}`);
     return response.data;
