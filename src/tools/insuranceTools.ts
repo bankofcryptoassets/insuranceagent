@@ -1,4 +1,7 @@
 import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 interface LoanDetails {
   loan_amount: number;
@@ -46,7 +49,7 @@ interface ActiveInsurance {
   status: string;
 }
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5001/api';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5005/api';
 
 export async function call(name: string, args: string) {
     const functionMapping: { [key: string]: Function } = {
@@ -87,9 +90,18 @@ async function fetchLoanDetails(obj: any): Promise<LoanDetails> {
  * @param loanId - The ID of the loan
  * @returns Insurance details
  */
-async function calculateInsuranceDetails(obj: any): Promise<InsuranceDetails> {
+async function calculateInsuranceDetails(obj: any): Promise<InsuranceDetails | { message: string }> {
   try {
-    const loanId = obj.loanId;
+    // check if the user has an active insurance for the loan
+    const loanId = obj._id;
+    const userId = obj.userId;
+    const activeInsurance = await getAllActiveInsurances({userId});
+    if (activeInsurance.length > 0) {
+      return {
+        message: "User already has an active insurance for the loan, can't purchase new insurance"
+      };
+    }
+
     const response = await axios.get(`${API_BASE_URL}/insurance/calculate/${loanId}`);
     return response.data;
   } catch (error) {
@@ -108,15 +120,17 @@ async function calculateInsuranceDetails(obj: any): Promise<InsuranceDetails> {
  */
 async function purchaseInsurance(
   obj: any
-): Promise<InsurancePurchase> {
+): Promise<{message: string, insuranceData: InsurancePurchase}> {
   try {
     const loanId = obj.loanId;
-    const userAddress = obj.userAddress;
-    const response = await axios.post(`${API_BASE_URL}/insurance/purchase/${loanId}`, {
-      userAddress
-    });
-    return response.data;
+    const response = await axios.post(`${API_BASE_URL}/insurance/purchase/${loanId}`);
+
+    return {
+      message: "Insurance purchased successfully",
+      insuranceData : response.data
+    }
   } catch (error) {
+    console.log("Error in purchaseInsurance: ", error);
     if (axios.isAxiosError(error)) {
       throw new Error(`Failed to purchase insurance: ${error.response?.data?.message || error.message}`);
     }
@@ -185,13 +199,11 @@ async function getInsuranceDetails(obj: any): Promise<InsuranceDetails | { messa
 async function getAllActiveInsurances(obj: any): Promise<ActiveInsurance[]> {
   try {
     const userId = obj.userId;
-    const response = await axios.get(`${API_BASE_URL}/insurance/active`);
+    const response = await axios.get(`${API_BASE_URL}/insurance/active?userId=${userId}`);
     return response.data;
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(`Failed to get active insurances: ${error.response?.data?.message || error.message}`);
-    }
-    throw error;
+    console.error(error);
+    return [];
   }
 }
 

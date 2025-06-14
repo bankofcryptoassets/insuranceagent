@@ -1,4 +1,4 @@
-import { fetchLoanDetails, calculateInsurance, purchaseInsurance, rolloverInsurance, cancelInsurance, getInsuranceDetails, getAllActiveInsurances } from "./definition";
+import { fetchLoanDetails, calculateInsurance, purchaseInsurance, rolloverInsurance, cancelInsurance } from "./definition";
 import { ChatCompletionTool } from "openai/resources";
 
 export const tools: ChatCompletionTool[] = [
@@ -7,6 +7,4 @@ export const tools: ChatCompletionTool[] = [
     purchaseInsurance,
     rolloverInsurance,
     cancelInsurance,
-    getInsuranceDetails,
-    getAllActiveInsurances
 ];

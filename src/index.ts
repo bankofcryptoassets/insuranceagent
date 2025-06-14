@@ -14,7 +14,7 @@ import fs from "fs";
 /* Get the wallet key associated to the public key of
  * the agent and the encryption key for the local db
  * that stores your agent's messages */
-const { WALLET_KEY, ENCRYPTION_KEY, OPENAI_API_KEY, XMTP_ENV } =
+const { WALLET_KEY, ENCRYPTION_KEY, OPENAI_API_KEY, XMTP_ENV, API_BASE_URL } =
   validateEnvironment([
     "WALLET_KEY",
     "ENCRYPTION_KEY",
@@ -41,7 +41,7 @@ async function initiateLoanAgent(): Promise<void> {
         fs.mkdirSync(volumePath, { recursive: true });
       }
       const dbPath = `${volumePath}/${env}-${suffix}.db3`;
-    
+
       return dbPath;
     };
     /* Create the signer using viem and parse the encryption key for the local db */
@@ -72,9 +72,12 @@ async function initiateLoanAgent(): Promise<void> {
       ) {
         continue;
       }
-
+      const inboxState = await client.preferences.inboxStateFromInboxIds([
+        message.senderInboxId,
+      ]);
+      const memberAddress = inboxState[0].identifiers[0].identifier;
       console.log(
-        `Received message: ${message.content} by ${message.senderInboxId}`,
+        `Received message: ${message.content} by ${message.senderInboxId} ${memberAddress}`,
       );
 
       /* Get the conversation from the local db */
@@ -97,7 +100,7 @@ async function initiateLoanAgent(): Promise<void> {
           };
         }
         return {
-          role: "user", 
+          role: "user",
           content: msg.content as string
         };
       });
@@ -109,10 +112,11 @@ async function initiateLoanAgent(): Promise<void> {
 
         Your goal is to convince the user to purchase an insurance for their loan.
 
-        You have access to the following tools, You can choose the best tool to use based on the user's message.
+        You have access to the following tools, You can choose the best tool to use based on the user's message
+        
+        The user's wallet address is: ${memberAddress}
         `;
 
-        console.log("messagesArray: ", messagesArray);
         const toolFinderMessages: ChatCompletionMessageParam[] = [
           { role: "system", content: toolFinderPrompt },
           ...messagesArray,
@@ -127,7 +131,7 @@ async function initiateLoanAgent(): Promise<void> {
         let toolResponses: any[] = ["no external information found"]
 
         if (toolFinderCompletion.choices[0].message.tool_calls) {
-          
+
           toolResponses = await Promise.all(
             toolFinderCompletion.choices[0].message.tool_calls.map(async (toolCall) => {
               return await call(
@@ -142,7 +146,7 @@ async function initiateLoanAgent(): Promise<void> {
         const systemPrompt = `
         You are BITMORE_XBT, an insurance agent and you help users by selecting insurance for their loans.
 
-        The user address you are interacting with is: ${clientInboxId}
+        The wallet address of the user you are interacting with is: ${memberAddress}
         Your goal is to convince the user to purchase insurance for their loan while providing accurate and helpful information.
         
         You have access to the following tools:
@@ -152,16 +156,13 @@ async function initiateLoanAgent(): Promise<void> {
         4. rollover_insurance(insuranceId) - Roll over existing insurance to a new period
         5. cancel_insurance(insuranceId) - Cancel an active insurance
         6. get_insurance_details(loanId) - Get details of an active insurance
-        7. get_all_active_insurances() - Get all active insurances
 
         IF THE USER ACCEPT INSURANCE, YOU MUST FOLLOW THE FOLLOWING STEPS:
-        1. Get the details of the loan an ask for confirmation
-        2. Check if the user has an active insurance for the loan and ask for confirmation [DO NOT PROCEED FURTHER IF THE USER HAS AN ACTIVE INSURANCE]
-        3. Calculate the insurance details and ask for confirmation
-        4. Purchase the insurance and ask for confirmation
-        5. Get the details of the insurance and tell the user that the insurance is purchased
+        1. Get the details of the loan an ask if user wants to proceed with insurance
+        2. Calculate the insurance details and present it as a proposal.
+        3. Purchase the insurance and present the details of the insurance to the user
 
-        REMEMBER: ALWAYS FOLLOW STEPS 1-4 IN THE ORDER THEY ARE LISTED.
+        REMEMBER: ALWAYS FOLLOW STEPS 1-3 IN THE ORDER THEY ARE LISTED.
 
         When responding to users:
         1. Use the tool response information to provide accurate and specific details
@@ -169,9 +170,8 @@ async function initiateLoanAgent(): Promise<void> {
         3. For loan details, highlight key information like loan amount, remaining amount, and asset price
         4. For insurance calculations, explain the strike price, expiry date, and BTC quantity in simple terms
         5. When suggesting insurance, use the calculated details to show the exact benefits
-        6. For active insurances, summarize the key details and suggest next steps
-        7. Always maintain a professional and helpful tone, and most importantly, be concise and to the point and use limited words.
-        8. Never mention steps in the response, just follow the steps and provide the response.
+        6. Always maintain a professional and helpful tone, and most importantly, be concise and to the point and use limited words.
+        7. Never mention steps in the response, just follow the steps and provide the response.
 
         Response Guidelines:
         - Start with a clear acknowledgment of the user's request.
@@ -193,9 +193,9 @@ async function initiateLoanAgent(): Promise<void> {
         - Be proactive in suggesting rollovers before expiry
         - Help with cancellations when requested
 
-        Tool Response that you got from the tools: ${JSON.stringify(toolResponses, null, 2)}
+        You have already invoked a tool for performing the current tasks and you received the following response:
+         ${JSON.stringify(toolResponses, null, 2)}
         `;
-      
 
         const messages: ChatCompletionMessageParam[] = [
           { role: "system", content: systemPrompt },

@@ -27,12 +27,16 @@ export const calculateInsurance: ChatCompletionTool = {
     parameters: {
       type: "object",
       properties: {
-        loanId: {
+        _id: {
           type: "string",
-          description: "The ID of the loan to calculate insurance for"
+          description: "The loan object id, this is the object id of the loan in the database"
+        },
+        userId: {
+          type: "string",
+          description: "The user id, this is the user id of the user in the database"
         }
       },
-      required: ["loanId"],
+      required: ["_id"],
       additionalProperties: false
     }
   }
@@ -49,13 +53,9 @@ export const purchaseInsurance: ChatCompletionTool = {
         loanId: {
           type: "string", 
           description: "The ID of the loan to purchase insurance for"
-        },
-        userAddress: {
-          type: "string",
-          description: "The wallet address of the user"
         }
       },
-      required: ["loanId", "userAddress"],
+      required: ["loanId"],
       additionalProperties: false
     }
   }
@@ -107,40 +107,21 @@ export const cancelInsurance: ChatCompletionTool = {
   }
 };
 
-export const getInsuranceDetails: ChatCompletionTool = {
-  type: "function",
-  function: {
-    name: "get_insurance_details",
-    description: "Retrieves details of a specific insurance policy",
-    parameters: {
-      type: "object",
-      properties: {
-        insuranceId: {
-          type: "string",
-          description: "The ID of the insurance policy to get details for"
-        }
-      },
-      required: ["insuranceId"],
-      additionalProperties: false
-    }
-  }
-};
-
-export const getAllActiveInsurances: ChatCompletionTool = {
-  type: "function",
-  function: {
-    name: "get_all_active_insurances",
-    description: "Retrieves a list of all active insurance policies for a user",
-    parameters: {
-      type: "object",
-      properties: {
-        userId: {
-          type: "string",
-          description: "The ID of the user to get active insurances for"
-        }
-      },
-      required: ["userId"],
-      additionalProperties: false
-    }
-  }
-};
+// export const getInsuranceDetails: ChatCompletionTool = {
+//   type: "function",
+//   function: {
+//     name: "get_insurance_details",
+//     description: "Retrieves details of a specific insurance policy",
+//     parameters: {
+//       type: "object",
+//       properties: {
+//         insuranceId: {
+//           type: "string",
+//           description: "The ID of the insurance policy to get details for"
+//         }
+//       },
+//       required: ["insuranceId"],
+//       additionalProperties: false
+//     }
+//   }
+// };

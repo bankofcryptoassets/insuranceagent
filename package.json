@@ -13,6 +13,7 @@
   "dependencies": {
     "@xmtp/node-sdk": "^2.1.0",
     "axios": "^1.7.9",
+    "dotenv": "^16.5.0",
     "openai": "4.94.0",
     "uint8arrays": "^5.1.0",
     "viem": "^2.31.0"
